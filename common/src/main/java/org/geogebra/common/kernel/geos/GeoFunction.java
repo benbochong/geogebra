@@ -139,7 +139,6 @@ public class GeoFunction extends GeoElement implements VarString, Translateable,
 	private AlgoDependentFunction dependentFunction;
 	private int tableViewColumn = -1;
 	private boolean pointsVisible = true;
-	private boolean forceInequality;
 
 	/**
 	 * Creates new function
@@ -402,7 +401,7 @@ public class GeoFunction extends GeoElement implements VarString, Translateable,
 				}
 			}
 			if (geo instanceof GeoFunction) {
-				setForceInequality(((GeoFunction) geo).forceInequality);
+				setForceInequality(((GeoFunction) geo).isForceInequality());
 			}
 			isInequality = null;
 		} else {
@@ -872,7 +871,7 @@ public class GeoFunction extends GeoElement implements VarString, Translateable,
 	 * @param fn
 	 *            function; to determine what kind of LHS we want
 	 */
-	private void initStringBuilder(StringBuilder stringBuilder,
+	public static void initStringBuilder(StringBuilder stringBuilder,
 			StringTemplate tpl, String label,
 			FunctionalNVar fn) {
 		stringBuilder.append(label);
@@ -884,7 +883,7 @@ public class GeoFunction extends GeoElement implements VarString, Translateable,
 				&& !tpl.hasType(StringType.GEOGEBRA_XML)) {
 			stringBuilder.append(": ");
 		} else {
-			if (forceInequality()) {
+			if (fn.isForceInequality()) {
 				stringBuilder.append(": ");
 			} else {
 				String var = fn.getVarString(tpl);
@@ -983,7 +982,7 @@ public class GeoFunction extends GeoElement implements VarString, Translateable,
 	 * @return type of function (inequality or function)
 	 */
 	public String getFunctionType() {
-		return forceInequality() ? "inequality"
+		return isForceInequality() ? "inequality"
 				: "function";
 	}
 
@@ -2126,7 +2125,7 @@ public class GeoFunction extends GeoElement implements VarString, Translateable,
 	@Override
 	public char getLabelDelimiter() {
 		return isBooleanFunction() || shortLHS != null
-				|| forceInequality ? ':' : '=';
+				|| isForceInequality() ? ':' : '=';
 	}
 
 	/**
@@ -3037,11 +3036,15 @@ public class GeoFunction extends GeoElement implements VarString, Translateable,
 		return true;
 	}
 
-	public boolean forceInequality() {
-		return forceInequality;
+	@Override
+	public boolean isForceInequality() {
+		return fun != null && fun.isForceInequality();
 	}
 
+	@Override
 	public void setForceInequality(boolean forceInequality) {
-		this.forceInequality = forceInequality;
+		if (fun != null) {
+			fun.setForceInequality(forceInequality);
+		}
 	}
 }

@@ -238,6 +238,9 @@ public class GeoFunctionNVar extends GeoElement
 				algoMacro.initFunction(this.fun);
 			}
 		}
+		if (geo instanceof GeoFunctionNVar) {
+			setForceInequality(((GeoFunctionNVar) geo).isForceInequality());
+		}
 		isInequality = fun.initIneqs(this.getFunctionExpression(), this);
 	}
 
@@ -442,28 +445,10 @@ public class GeoFunctionNVar extends GeoElement
 	public String toString(StringTemplate tpl) {
 		sbToString.setLength(0);
 		if (isLabelSet()) {
-			initStringBuilder(sbToString, tpl, label, this);
+			GeoFunction.initStringBuilder(sbToString, tpl, label, this);
 		}
 		sbToString.append(toValueString(tpl));
 		return sbToString.toString();
-	}
-
-	private void initStringBuilder(StringBuilder stringBuilder,
-			StringTemplate tpl, String label,
-			FunctionalNVar fn) {
-		stringBuilder.append(label);
-		if (fn.getShortLHS() != null) {
-			stringBuilder.append(": ");
-			stringBuilder.append(fn.getShortLHS());
-			stringBuilder.append(tpl.getEqualsWithSpace());
-		} else if (fn.isBooleanFunction()
-				&& !tpl.hasType(ExpressionNodeConstants.StringType.GEOGEBRA_XML)) {
-			stringBuilder.append(": ");
-		} else {
-			String var = fn.getVarString(tpl);
-			tpl.appendWithBrackets(stringBuilder, var);
-			stringBuilder.append(tpl.getEqualsWithSpace());
-		}
 	}
 
 	@Override
@@ -492,7 +477,7 @@ public class GeoFunctionNVar extends GeoElement
 
 	@Override
 	public char getLabelDelimiter() {
-		return isBooleanFunction() || shortLHS != null ? ':' : '=';
+		return isBooleanFunction() || isForceInequality() || shortLHS != null ? ':' : '=';
 	}
 
 	/**
@@ -511,6 +496,7 @@ public class GeoFunctionNVar extends GeoElement
 			sb.append("\" exp=\"");
 			StringUtil.encodeXML(sb, toString(StringTemplate.xmlTemplate));
 			// expression
+			appendFunctionType(sb);
 			sb.append("\"/>\n");
 		}
 
@@ -522,6 +508,26 @@ public class GeoFunctionNVar extends GeoElement
 		}
 		// sb.append(sb);
 		sb.append("</element>\n");
+	}
+
+	/**
+	 * If single-inequality use inequality type,
+	 * function otherwise
+	 * @param sbxml xml string builder
+	 */
+	public void appendFunctionType(StringBuilder sbxml) {
+		sbxml.append("\" type=\"");
+		sbxml.append(getFunctionType());
+		sbxml.append("\"/>\n");
+	}
+
+	/**
+	 * function type
+	 * @return type of function (inequality or function)
+	 */
+	public String getFunctionType() {
+		return isForceInequality() ? "inequality"
+				: "function";
 	}
 
 	@Override
@@ -1442,4 +1448,15 @@ public class GeoFunctionNVar extends GeoElement
 		return super.getAutoColorScheme();
 	}
 
+	@Override
+	public boolean isForceInequality() {
+		return fun != null && fun.isForceInequality();
+	}
+
+	@Override
+	public void setForceInequality(boolean forceInequality) {
+		if (fun != null) {
+			fun.setForceInequality(forceInequality);
+		}
+	}
 }
